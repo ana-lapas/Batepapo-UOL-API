@@ -40,7 +40,7 @@ app.get('/participants', async (req, res) => {
         if (!usersOn) {
             return res.sendStatus(404);
         }
-        return res.send(usersOn);
+        return res.sendStatus(201).send(usersOn);
     } catch (err) {
         console.log(err);
         return res.sendStatus(500);
