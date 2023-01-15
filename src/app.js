@@ -78,6 +78,38 @@ app.get('/participants', async (req, res) => {
     }
 });
 
+app.post('/messages', async (req, res) => {
+    const { user } = req.headers;
+    const newMessage = {
+        from: user,
+        to: req.body.to,
+        text: req.body.text,
+        type: req.body.type,
+        time: dayjs().format("HH:mm:ss")
+    };
+
+    try {
+        const validationM = newMessageSchema.validate(newMessage, { abortEarly: false });
+        if (validationM.error) {
+            const erros = validationM.error.details.map((detail) => detail.message);
+            return res.status(422).send(erros);
+        };
+        const checkUser = await participantsOnCollection.findOne({ name: user });
+        if (!checkUser) {
+            return res.sendStatus(422);
+        }
+        await messagesSentCollection.insertOne({
+            from: user,
+            to: req.body.to,
+            text: req.body.text,
+            type: req.body.type
+        });
+        return res.sendStatus(201);
+    } catch (err) {
+        return res.sendStatus(500);
+    }
+});
+
 app.get('/messages', async (req, res) => {
     const limit = parseInt(req.query.limit);
     const { user } = req.headers;
@@ -102,29 +134,6 @@ app.get('/messages', async (req, res) => {
 });
 
 
-app.post('/messages', async (req, res) => {
-    const { user } = req.headers;
-    const newMessage = {
-        from: user,
-        to: req.body.to,
-        text: req.body.text,
-        type: req.body.type,
-        time: dayjs().format("HH:mm:ss")
-    };
-
-    try {
-        const validationM = newMessageSchema.validate(newMessage, { abortEarly: false });
-        if (validationM.error) {
-            const erros = validationM.error.details.map((detail) => detail.message);
-            return res.status(422).send(erros);
-        };
-
-        await messagesSentCollection.insertOne({ newMessage });
-        return res.sendStatus(201);
-    } catch (err) {
-        return res.sendStatus(500);
-    }
-});
 
 app.post('/status', async (req, res) => {
     const { user } = req.headers;
