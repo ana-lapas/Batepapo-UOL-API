@@ -71,8 +71,8 @@ app.get('/messages', async (req, res) => {
 });
 
 app.post('/participants', async (req, res) => {
-    const newUser = req.body;
-    const validation = newUserSchema.validate({ name: newUser.name }, { abortEarly: false });
+    const { name } = req.body;
+    const validation = newUserSchema.validate({ name }, { abortEarly: false });
 
     if (validation.error) {
         const errors = validation.error.details.map((detail) => detail.message);
@@ -80,19 +80,19 @@ app.post('/participants', async (req, res) => {
     }
 
     try {
-        const checkUser = await participantsOnCollection.findOne({ name: userName.name });
+        const checkUser = await participantsOnCollection.findOne({ name });
         if (checkUser) {
             return res.sendStatus(409);
         }
-        await participantsOnCollection.insertOne({ name: userName.name, lastStatus: Date.now() });
+        await participantsOnCollection.insertOne({ name, lastStatus: Date.now() });
         await messagesSentCollection.insertOne({
-            from: userName.name,
+            from: name,
             to: 'Todos',
             text: 'entra na sala...',
             type: 'status',
             time: dayjs().format('HH:mm:ss')
         });
-        return res.sendStatus(201);
+        res.sendStatus(201);
 
     } catch (err) {
         console.log(err);
