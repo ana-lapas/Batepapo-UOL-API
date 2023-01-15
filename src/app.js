@@ -133,8 +133,6 @@ app.get('/messages', async (req, res) => {
     }
 });
 
-
-
 app.post('/status', async (req, res) => {
     const { user } = req.headers;
     try {
