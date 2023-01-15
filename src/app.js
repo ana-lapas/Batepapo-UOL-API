@@ -3,12 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { MongoClient } from "mongodb";
 import dayjs from 'dayjs';
-
-
+import joi from 'joi';
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-dotenv.config();
 
 const newUserSchema = joi.object({
     name: joi.string().required().min(3),
@@ -23,16 +22,14 @@ const newMessageSchema = joi.object({
 });
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
-let db;
 
-mongoClient.connect()
-    .then(() => {
-        db = mongoClient.db();
-        console.log("MongoClient is connected")
-    })
-    .catch(() => {
-        console.log("MongoClient is not connected")
-    });
+try{
+    await mongoClient.connect();
+    console.log("MongoClient is connected")
+} catch (err){
+    console.log(err)
+}
+const db = mongoClient.db();
 
 const participantsOnCollection = db.collection("participants");
 const messagesSentCollection = db.collection("messages");
