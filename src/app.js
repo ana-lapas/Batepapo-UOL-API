@@ -14,7 +14,7 @@ const newUserSchema = joi.object({
 });
 
 const newMessageSchema = joi.object({
-    from: joi.string().required(),
+    from: joi.string(),
     to: joi.string().required().min(3),
     text: joi.string().required().min(1),
     type: joi.string().required().valid("message", "private_message"),
