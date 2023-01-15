@@ -98,12 +98,7 @@ app.post('/messages', async (req, res) => {
         if (!checkUser) {
             return res.sendStatus(422);
         }
-        await messagesSentCollection.insertOne({
-            from: user,
-            to: req.body.to,
-            text: req.body.text,
-            type: req.body.type
-        });
+        await messagesSentCollection.insertOne({newMessage});
         return res.sendStatus(201);
     } catch (err) {
         return res.sendStatus(500);
@@ -111,7 +106,7 @@ app.post('/messages', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    const limit = parseInt(req.query.limit);
+    const limit = Number(req.query.limit);
     const { user } = req.headers;
 
     try {
@@ -124,9 +119,11 @@ app.get('/messages', async (req, res) => {
         }).limit(limit).toArray();
 
         if (messagesEx.length === 0) {
-            return res.status(404).send("No message found");
+          res.status(404).send("No message found");
+          return 
         }
-        return res.send(messagesEx);
+        res.status(200).send(messagesEx);
+        return;
     }
     catch (err) {
         return res.sendStatus(500);
