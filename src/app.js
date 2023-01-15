@@ -84,14 +84,13 @@ app.post('/participants', async (req, res) => {
         if (checkUser) {
             return res.sendStatus(409);
         }
-        let hora = dayjs().format('HH:mm:ss');
         await participantsOnCollection.insertOne({ name: userName.name, lastStatus: Date.now() });
         await messagesSentCollection.insertOne({
             from: userName.name,
             to: 'Todos',
             text: 'entra na sala...',
             type: 'status',
-            time: hora
+            time: dayjs().format('HH:mm:ss')
         });
         return res.sendStatus(201);
 
