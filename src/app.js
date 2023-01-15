@@ -85,7 +85,7 @@ app.post('/messages', async (req, res) => {
         to: req.body.to,
         text: req.body.text,
         type: req.body.type,
-        time: dayjs().format("HH:mm:ss")
+        time: dayjs().format("HH:MM:SS")
     };
 
     try {
@@ -99,7 +99,8 @@ app.post('/messages', async (req, res) => {
             return res.sendStatus(422);
         }
         await messagesSentCollection.insertOne({newMessage});
-        return res.sendStatus(201);
+         res.sendStatus(201);
+         return;
     } catch (err) {
         return res.sendStatus(500);
     }
@@ -122,7 +123,7 @@ app.get('/messages', async (req, res) => {
           res.status(404).send("No message found");
           return 
         }
-        res.status(200).send(messagesEx);
+        res.status(201).send(messagesEx);
         return;
     }
     catch (err) {
