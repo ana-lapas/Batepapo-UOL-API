@@ -34,42 +34,6 @@ const db = mongoClient.db();
 const participantsOnCollection = db.collection("participants");
 const messagesSentCollection = db.collection("messages");
 
-app.get('/participants', async (req, res) => {
-    try {
-        const usersOn = await participantsOnCollection.find().toArray();
-        if (!usersOn) {
-            return res.sendStatus(404);
-        }
-        return res.sendStatus(201).send(usersOn);
-    } catch (err) {
-        console.log(err);
-        return res.sendStatus(500);
-    }
-});
-
-app.get('/messages', async (req, res) => {
-    const limit = parseInt(req.query.limit);
-    const { user } = req.headers;
-
-    try {
-        const messagesEx = await messagesSentCollection.find({
-            $or: [
-                { from: user },
-                { to: { $in: [user, "Todos"] } },
-                { type: "message" },
-            ],
-        }).limit(limit).toArray();
-
-        if (messagesEx.length === 0) {
-            return res.status(404).send("No message found");
-        }
-        return res.send(messagesEx);
-    }
-    catch (err) {
-        return res.sendStatus(500);
-    }
-});
-
 app.post('/participants', async (req, res) => {
     const { name } = req.body;
     const validation = newUserSchema.validate({ name }, { abortEarly: false });
@@ -99,6 +63,44 @@ app.post('/participants', async (req, res) => {
         res.sendStatus(500);
     }
 });
+
+app.get('/participants', async (req, res) => {
+    try {
+        const usersOn = await participantsOnCollection.find().toArray();
+        if (!usersOn) {
+            return res.sendStatus(404);
+        }
+        res.send(usersOn);
+        return;
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+});
+
+app.get('/messages', async (req, res) => {
+    const limit = parseInt(req.query.limit);
+    const { user } = req.headers;
+
+    try {
+        const messagesEx = await messagesSentCollection.find({
+            $or: [
+                { from: user },
+                { to: { $in: [user, "Todos"] } },
+                { type: "message" },
+            ],
+        }).limit(limit).toArray();
+
+        if (messagesEx.length === 0) {
+            return res.status(404).send("No message found");
+        }
+        return res.send(messagesEx);
+    }
+    catch (err) {
+        return res.sendStatus(500);
+    }
+});
+
 
 app.post('/messages', async (req, res) => {
     const { user } = req.headers;
