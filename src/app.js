@@ -85,7 +85,7 @@ app.post('/messages', async (req, res) => {
         to: req.body.to,
         text: req.body.text,
         type: req.body.type,
-        time: dayjs().format("HH:MM:SS")
+        time: dayjs().format("HH:mm:ss"),
     };
 
     try {
@@ -109,7 +109,9 @@ app.post('/messages', async (req, res) => {
 app.get('/messages', async (req, res) => {
     const limit = Number(req.query.limit);
     const { user } = req.headers;
-
+    if (limit < 1) {
+        return res.sendStatus(422);
+    }
     try {
         const messagesEx = await messagesSentCollection.find({
             $or: [
@@ -123,7 +125,7 @@ app.get('/messages', async (req, res) => {
           res.status(404).send("No message found");
           return 
         }
-        res.status(201).send(messagesEx);
+        res.status(200).send(messagesEx);
         return;
     }
     catch (err) {
