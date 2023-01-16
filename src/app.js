@@ -108,24 +108,27 @@ app.post('/messages', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    const limit = Number(req.query.limit);
+    const limit = parseInt(req.query.limit);
     const { user } = req.headers;
-    if (limit < 1) {
+
+    if ((limit < 1) || (typeOf(limit) != number) || (limit === 0)) {
         return res.sendStatus(422);
-    }
+    };
+
     try {
-        const messages = await messagesSentCollection.find({
+        const allMessages = await messagesSentCollection.find({
             $or: [
                 { from: user },
                 { to: { $in: [user, "Todos"] } },
                 { type: "message" }]
         }).limit(limit).toArray();
+        const test = allMessages.map(m => {return { 
+            to: m.to, 
+            text: m.text, 
+            type: m.type, 
+            from: m.from }});
 
-        if (messages.length === 0) {
-            res.status(404).send("No message found");
-            return;
-        }
-        res.send(messages);
+        res.send(test);
     }
     catch (err) {
         console.log(err)
