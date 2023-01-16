@@ -110,7 +110,9 @@ app.post('/messages', async (req, res) => {
 app.get('/messages', async (req, res) => {
     const limit = Number(req.query.limit);
     const { user } = req.headers;
-
+    if ((limit < 1) || (isNaN)) {
+        return res.status(422);
+    }
     try {
         const allMessages = await messagesSentCollection.find({
             $or: [
@@ -122,20 +124,16 @@ app.get('/messages', async (req, res) => {
             return res.status(404).send("Não foi encontrada nenhuma mensagem!");
         }
 
-        if (limit < 1) {
-            return res.status(422);
-        }
-
-        const messages = allMessages.map(m => {
+        /*const messages = allMessages.map(m => {
             return {
                 to: m.to,
                 text: m.text,
                 type: m.type,
                 from: m.from
             }
-        });
+        });*/
 
-        res.send(messages);
+        res.send(allMessages);
     }
     catch (err) {
         console.log(err)
