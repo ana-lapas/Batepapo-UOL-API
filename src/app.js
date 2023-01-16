@@ -126,7 +126,7 @@ app.get('/messages', async (req, res) => {
             return res.status(422);
         }
 
-        const test = allMessages.map(m => {
+        const messages = allMessages.map(m => {
             return {
                 to: m.to,
                 text: m.text,
@@ -135,7 +135,7 @@ app.get('/messages', async (req, res) => {
             }
         });
 
-        res.send(test);
+        res.send(messages);
     }
     catch (err) {
         console.log(err)
