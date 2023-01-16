@@ -14,7 +14,7 @@ const newUserSchema = joi.object({
 });
 
 const newMessageSchema = joi.object({
-    from: joi.string(),
+    from: joi.string().required(),
     to: joi.string().required().min(3),
     text: joi.string().required().min(1),
     type: joi.string().required().valid("message", "private_message"),
@@ -23,10 +23,10 @@ const newMessageSchema = joi.object({
 
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
-try{
+try {
     await mongoClient.connect();
     console.log("MongoClient is connected")
-} catch (err){
+} catch (err) {
     console.log(err)
 }
 const db = mongoClient.db();
@@ -85,7 +85,7 @@ app.post('/messages', async (req, res) => {
         to: req.body.to,
         text: req.body.text,
         type: req.body.type,
-        time: dayjs().format("HH:mm:ss"),
+        time: dayjs().format('HH:mm:ss')
     };
 
     try {
@@ -98,9 +98,9 @@ app.post('/messages', async (req, res) => {
         if (!checkUser) {
             return res.sendStatus(422);
         }
-        await messagesSentCollection.insertOne({newMessage});
-         res.sendStatus(201);
-         return;
+        await messagesSentCollection.insertOne({ newMessage });
+        res.sendStatus(201);
+        return;
     } catch (err) {
         return res.sendStatus(500);
     }
@@ -113,22 +113,21 @@ app.get('/messages', async (req, res) => {
         return res.sendStatus(422);
     }
     try {
-        const messagesEx = await messagesSentCollection.find({
+        const messages = await messagesSentCollection.find({
             $or: [
                 { from: user },
                 { to: { $in: [user, "Todos"] } },
-                { type: "message" },
-            ],
+                { type: "message" }]
         }).limit(limit).toArray();
 
-        if (messagesEx.length === 0) {
-          res.status(404).send("No message found");
-          return 
+        if (messages.length === 0) {
+            res.status(404).send("No message found");
+            return;
         }
-        res.status(200).send(messagesEx);
-        return;
+        res.send(messages);
     }
     catch (err) {
+        console.log(err)
         return res.sendStatus(500);
     }
 });
@@ -137,9 +136,9 @@ app.post('/status', async (req, res) => {
     const { user } = req.headers;
     try {
         const existingUser = await participantsOnCollection.findOne({ name: user });
-            if (!existingUser) {
-                return res.sendStatus(404);
-            }
+        if (!existingUser) {
+            return res.sendStatus(404);
+        }
         await participantsOnCollection.updateOne({ name: user },
             { $set: { lastStatus: Date.now() } });
         return res.sendStatus(200)
@@ -147,8 +146,30 @@ app.post('/status', async (req, res) => {
         console.log(err);
         return res.sendStatus(500);
     }
-})
-//Remover os participantes ainda;
-/*setInterval( ,1500)*/
+});
+
+setInterval(async () => {
+    const tenS = Date.now() - 10000;
+    try {
+        const usersOff = await participantsOnCollection.find({ lastStatus: { $lte: tenS } }).toArray();
+        if (usersOff.length > 0) {
+            const messagesOff = usersOff.map((user) => {
+                return {
+                    from: user.user,
+                    to: 'Todos',
+                    text: 'sai da sala...',
+                    type: 'status',
+                    time: dayjs().format('HH:mm:ss')
+                }
+            });
+            await messagesSentCollection.insertMany(messagesOff);
+            await participantsOnCollection.deleteMany({lastStatus: { $lte: tenS }});
+        }
+
+    } catch (err) {
+        console.log(err)
+        res.status(500);
+    }
+}, 1500);
 
 app.listen(5000, () => console.log(`Server is running on port 5000`));
