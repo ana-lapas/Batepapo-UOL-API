@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import joi from "joi";
 import { MongoClient } from "mongodb";
-import dayjs from 'dayjs';
-import joi from 'joi';
+import dayjs from "dayjs";
+import dotenv from "dotenv";
+import cors from 'cors';
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -79,7 +79,7 @@ app.get('/participants', async (req, res) => {
 });
 
 app.post('/messages', async (req, res) => {
-    const { to, text, type} = req.body;
+    const { to, text, type } = req.body;
     const { user } = req.headers;
     const newMessage = {
         from: user,
@@ -108,12 +108,8 @@ app.post('/messages', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    const limit = parseInt(req.query.limit);
+    const limit = Number(req.query.limit);
     const { user } = req.headers;
-
-    if ((limit < 1) || (typeOf(limit) != number) || (limit === 0)) {
-        return res.sendStatus(422);
-    };
 
     try {
         const allMessages = await messagesSentCollection.find({
@@ -122,17 +118,28 @@ app.get('/messages', async (req, res) => {
                 { to: { $in: [user, "Todos"] } },
                 { type: "message" }]
         }).limit(limit).toArray();
-        const test = allMessages.map(m => {return { 
-            to: m.to, 
-            text: m.text, 
-            type: m.type, 
-            from: m.from }});
+        if (allMessages.length === 0) {
+            return res.status(404).send("Não foi encontrada nenhuma mensagem!");
+        }
+
+        if (limit < 1) {
+            return res.status(422);
+        }
+
+        const test = allMessages.map(m => {
+            return {
+                to: m.to,
+                text: m.text,
+                type: m.type,
+                from: m.from
+            }
+        });
 
         res.send(test);
     }
     catch (err) {
         console.log(err)
-        return res.sendStatus(500);
+        res.sendStatus(500);
     }
 });
 
@@ -167,7 +174,7 @@ setInterval(async () => {
                 }
             });
             await messagesSentCollection.insertMany(messagesOff);
-            await participantsOnCollection.deleteMany({lastStatus: { $lte: tenS }});
+            await participantsOnCollection.deleteMany({ lastStatus: { $lte: tenS } });
         }
 
     } catch (err) {
