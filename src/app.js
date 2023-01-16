@@ -137,7 +137,7 @@ app.get('/messages', async (req, res) => {
             }
         });
 
-        res.send(allMessages);
+        res.send(messages);
     }
     catch (err) {
         console.log(err)
