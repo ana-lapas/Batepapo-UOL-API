@@ -79,12 +79,13 @@ app.get('/participants', async (req, res) => {
 });
 
 app.post('/messages', async (req, res) => {
+    const { to, text, type} = req.body;
     const { user } = req.headers;
     const newMessage = {
         from: user,
-        to: req.body.to,
-        text: req.body.text,
-        type: req.body.type,
+        to,
+        text,
+        type,
         time: dayjs().format('HH:mm:ss')
     };
 
@@ -98,7 +99,7 @@ app.post('/messages', async (req, res) => {
         if (!checkUser) {
             return res.sendStatus(422);
         }
-        await messagesSentCollection.insertOne({ newMessage });
+        await messagesSentCollection.insertOne(newMessage);
         res.sendStatus(201);
         return;
     } catch (err) {
