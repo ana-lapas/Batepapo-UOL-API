@@ -133,7 +133,8 @@ app.get('/messages', async (req, res) => {
                 to: m.to,
                 text: m.text,
                 type: m.type,
-                from: m.from
+                from: m.from, 
+                time: m.time
             }
         });
 
