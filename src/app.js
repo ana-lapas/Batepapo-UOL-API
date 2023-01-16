@@ -4,6 +4,7 @@ import { MongoClient } from "mongodb";
 import dayjs from "dayjs";
 import dotenv from "dotenv";
 import cors from 'cors';
+
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -28,6 +29,7 @@ try {
     console.log("MongoClient is connected")
 } catch (err) {
     console.log(err)
+    console.log("Mongo Client is not connected");
 }
 const db = mongoClient.db();
 
@@ -108,30 +110,32 @@ app.post('/messages', async (req, res) => {
 });
 
 app.get('/messages', async (req, res) => {
-    const limit = Number(req.query.limit);
-    const { user } = req.headers;
-    if ((limit < 1) || (isNaN)) {
-        return res.status(422);
-    }
-    try {
+    
+    try {        
+        const limit = parseInt(req.query.limit);
+        const { user } = req.headers;
+        if (limit < 0 || isNaN(limit)) {
+            return res.status(422);
+        }
         const allMessages = await messagesSentCollection.find({
             $or: [
                 { from: user },
                 { to: { $in: [user, "Todos"] } },
-                { type: "message" }]
-        }).limit(limit).toArray();
+                { type: "message" },],
+            }).limit(limit).toArray();
+                
         if (allMessages.length === 0) {
             return res.status(404).send("Não foi encontrada nenhuma mensagem!");
         }
 
-        /*const messages = allMessages.map(m => {
+        const messages = allMessages.map(m => {
             return {
                 to: m.to,
                 text: m.text,
                 type: m.type,
                 from: m.from
             }
-        });*/
+        });
 
         res.send(allMessages);
     }
@@ -177,7 +181,7 @@ setInterval(async () => {
 
     } catch (err) {
         console.log(err)
-        res.status(500);
+        res.sendStatus(500);
     }
 }, 1500);
 
